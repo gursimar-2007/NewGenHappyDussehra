@@ -292,7 +292,6 @@ textarea{display:block;width:100%;min-height:230px;resize:vertical;background:#0
   let musicPlaying = true;
   const originalBgVolume = 1;
 
-  // Try to play music on page load
   bgMusic.play().catch(e => {
     console.log("Autoplay blocked, will play on first interaction");
     musicPlaying = false;
@@ -311,7 +310,6 @@ textarea{display:block;width:100%;min-height:230px;resize:vertical;background:#0
     }
   });
 
-  // Fallback: play music on first user interaction if autoplay was blocked
   document.addEventListener("click", () => {
     if (!musicPlaying && bgMusic.paused) {
       bgMusic.play().catch(() => {});
@@ -320,7 +318,6 @@ textarea{display:block;width:100%;min-height:230px;resize:vertical;background:#0
     }
   }, { once: true });
 
-  // Head audio hover effects
   const headAudios = [];
   for (let i = 1; i <= 10; i++) {
     headAudios.push(document.getElementById(`headAudio${i}`));
@@ -338,11 +335,9 @@ textarea{display:block;width:100%;min-height:230px;resize:vertical;background:#0
     bgMusic.volume = originalBgVolume;
   }
 
-  // Keep pupil movement subtle: the heads themselves never follow the pointer.
   document.addEventListener("pointermove", (event) => {
     const pupils = document.querySelectorAll(".pupil");
     pupils.forEach((pupil) => {
-      // Convert each pupil's own SVG coordinates to screen coordinates, including its head scale/translation.
       const point = pupil.ownerSVGElement.createSVGPoint();
       point.x = Number(pupil.getAttribute("cx"));
       point.y = Number(pupil.getAttribute("cy"));
@@ -361,192 +356,126 @@ textarea{display:block;width:100%;min-height:230px;resize:vertical;background:#0
     const brows = document.querySelectorAll(".brow");
     const brow = brows[Math.floor(Math.random() * brows.length)];
     if (!brow || brow.closest(".head")?.classList.contains("burned")) return;
-    brow.setAttribute("transform", "translate(0 -1) scale(1.02 1.2)");
-    setTimeout(() => brow.removeAttribute("transform"), 650 + Math.random() * 650);
-  }, 900);
-
-  function normalize(code) {
-    return code
-      .replace(/\/\/.*$/gm, "")
-      .replace(/\/\*[\s\S]*?\*\//g, "")
-      .replace(/\s+/g, "")
-      .replace(/;+}/g, ";}")
-      .trim();
-  }
-  function openChallenge(index) {
-    if (burned.has(index) || locked) return;
-    current = index;
-    wrongAttempts = 0;
-    audioHelp.hidden = true;
-    audioPlayer.innerHTML = "";
-    stopCurrentHeadAudio();
-    const c = challenges[index];
-    document.getElementById("challengeNumber").textContent = `Head ${String(index + 1).padStart(2, "0")} / 10`;
-    document.getElementById("challengeTitle").textContent = c.title;
-    document.getElementById("challengeDesc").textContent = c.desc;
-    editor.value = c.code;
-    feedback.className = "feedback";
-    feedback.textContent = "";
-    hint.hidden = true;
-    hint.textContent = "";
-    overlay.classList.add("show");
-    setTimeout(() => editor.focus(), 50);
-  }
-  function closeChallenge() {
-    overlay.classList.remove("show");
-    current = null;
-    stopCurrentHeadAudio();
-    ravanLaugh.pause();
-    ravanLaugh.currentTime = 0;
-  }
-  function laughHead(index) {
-    const head = heads[index];
-    head.classList.remove("laugh");
-    void head.getBoundingClientRect();
-    head.classList.add("laugh");
-    setTimeout(() => head.classList.remove("laugh"), 500);
-  }
-  function updateStats() {
-    document.getElementById("burnCount").textContent = burned.size;
-    document.getElementById("solveCount").textContent = solved;
-    document.getElementById("progressFill").style.width = `${burned.size * 10}%`;
-  }
-  function confettiBurst(count=90) {
-    const colors = ["#ff672a","#ffd15d","#fff0b3","#b51c22","#fff"];
-    for (let i=0;i<count;i++) {
-      const piece = document.createElement("i");
-      piece.className = "confetti";
-      piece.style.left = Math.random()*100+"vw";
-      piece.style.background = colors[Math.floor(Math.random()*colors.length)];
-      piece.style.animationDelay = (Math.random()*.8)+"s";
-      piece.style.animationDuration = (2.5+Math.random()*2.2)+"s";
-      piece.style.transform = `rotate(${Math.random()*180}deg)`;
-      document.body.appendChild(piece);
-      setTimeout(()=>piece.remove(),5500);
-    }
-  }
-  function burnCurrent() {
-    const index = current;
-    const head = heads[index];
-    closeChallenge();
-    locked = true;
-    // Add a flame halo around this head only, using the head's own position and scale.
-    const use = head.querySelector("use");
-    const transform = use?.getAttribute("transform") || "translate(500 150) scale(1.3)";
-    const flames = document.createElementNS("http://www.w3.org/2000/svg", "g");
-    flames.setAttribute("class", "flame-burst");
-    flames.setAttribute("transform", transform);
-    flames.setAttribute("aria-hidden", "true");
-    flames.innerHTML = `
-      <path class="flame-outer" d="M-39 25 Q-52 5 -43 -14 Q-35 -4 -34 -22 Q-20 -9 -22 -34 Q-5 -20 -7 -48 Q8 -31 8 -53 Q24 -31 19 -17 Q36 -28 35 -7 Q48 2 39 25 L31 42 L-31 42Z"/>
-      <path class="flame-outer" d="M-30 35 Q-42 12 -29 -1 Q-26 11 -17 1 Q-9 13 -8 -7 Q5 8 9 -5 Q21 8 25 -2 Q37 14 28 35Z"/>
-      <path class="flame-inner" d="M-22 33 Q-28 14 -17 8 Q-14 19 -6 11 Q0 22 7 9 Q18 19 21 9 Q29 22 19 34Z"/>`;
-    head.appendChild(flames);
-    head.classList.add("burning");
+    brow.style.transform = "rotate(14deg) translateY(-2px)";
     setTimeout(() => {
-      head.classList.remove("burning");
-      flames.remove();
-      head.classList.add("burned");
-      burned.add(index);
-      solved++;
-      updateStats();
-      locked = false;
-      if (burned.size === 10) {
-        setTimeout(() => {
+      brow.style.transform = "";
+    }, 1400);
+  }, 3200);
+
+  heads.forEach((h, idx) => {
+    h.addEventListener("click", () => {
+      if (h.classList.contains("burned") || locked) return;
+      current = idx;
+      wrongAttempts = 0;
+      audioHelp.hidden = true;
+      audioPlayer.innerHTML = "";
+      const ch = challenges[idx];
+      document.getElementById("challengeNumber").textContent = `Head ${String(idx + 1).padStart(2, '0')} / 10`;
+      document.getElementById("challengeTitle").textContent = ch.title;
+      document.getElementById("challengeDesc").textContent = ch.desc;
+      editor.value = ch.code;
+      feedback.className = "feedback";
+      feedback.textContent = "";
+      hint.hidden = true;
+      hint.textContent = ch.hint;
+      overlay.classList.add("show");
+    });
+  });
+
+  document.getElementById("closeModal").addEventListener("click", () => {
+    overlay.classList.remove("show");
+    stopCurrentHeadAudio();
+  });
+
+  document.getElementById("showHint").addEventListener("click", () => {
+    hint.hidden = !hint.hidden;
+  });
+
+  document.getElementById("resetCode").addEventListener("click", () => {
+    if (current !== null) {
+      editor.value = challenges[current].code;
+      feedback.className = "feedback";
+      feedback.textContent = "";
+    }
+  });
+
+  document.getElementById("submitFix").addEventListener("click", () => {
+    if (current === null || locked) return;
+    const ch = challenges[current];
+    const cleanUser = editor.value.replace(/\s+/g, "");
+    const cleanSol = ch.solution.replace(/\s+/g, "");
+
+    if (cleanUser === cleanSol) {
+      feedback.className = "feedback good";
+      feedback.innerHTML = "<strong>Correct!</strong> Bug successfully crushed. Lighting up the head...";
+      feedback.classList.add("show");
+      locked = true;
+
+      const headEl = heads[current];
+      headEl.classList.add("burning");
+      stopCurrentHeadAudio();
+
+      fireSound.currentTime = 0;
+      fireSound.play().catch(() => {});
+
+      const headAudio = headAudios[current];
+      if (headAudio) {
+        headAudio.play().catch(() => {});
+      }
+
+      setTimeout(() => {
+        headEl.classList.remove("burning");
+        headEl.classList.add("burned");
+        burned.add(current);
+        solved++;
+        document.getElementById("burnCount").textContent = burned.size;
+        document.getElementById("solveCount").textContent = solved;
+        document.getElementById("progressFill").style.width = `${(burned.size / 10) * 100}%`;
+        locked = false;
+        overlay.classList.remove("show");
+
+        if (burned.size === 10) {
           ravan.classList.add("all-burning");
-          confettiBurst(150);
+          fireSound.play().catch(() => {});
           setTimeout(() => {
             victoryOverlay.classList.add("show");
-            confettiBurst(120);
-          }, 950);
-        }, 420);
-      }
-    }, 690);
-  }
-
-  heads.forEach((head) => {
-    const index = Number(head.dataset.head);
-    head.addEventListener("mouseenter", () => {
-      if (head.classList.contains("burned") || head.querySelector(".anger-face")) return;
-      const use = head.querySelector("use");
-      const anger = document.createElementNS("http://www.w3.org/2000/svg", "g");
-      anger.setAttribute("class", "anger-face");
-      anger.setAttribute("transform", use?.getAttribute("transform") || "translate(500 150) scale(1.3)");
-      anger.setAttribute("aria-hidden", "true");
-      anger.innerHTML = `
-        <path d="M-29 3 L-7 11 M7 11 L29 3" fill="none" stroke="#5b080d" stroke-width="6.5" stroke-linecap="round"/>
-        <path d="M-28 2 L-7 10 M7 10 L28 2" fill="none" stroke="#ff3727" stroke-width="2.2" stroke-linecap="round"/>
-        <ellipse cx="-14" cy="14" rx="5.3" ry="4.2" fill="#f31e18" opacity=".8"/>
-        <ellipse cx="14" cy="14" rx="5.3" ry="4.2" fill="#f31e18" opacity=".8"/>`;
-      head.appendChild(anger);
-
-      // Play head audio and reduce background music
-      stopCurrentHeadAudio();
-      bgMusic.volume = 0.4;
-      currentHeadAudio = headAudios[index];
-      if (currentHeadAudio) {
-        currentHeadAudio.play().catch(e => console.log("Head audio play failed:", e));
-      }
-    });
-    head.addEventListener("mouseleave", () => {
-      head.querySelectorAll(".anger-face").forEach(a => a.remove());
-      stopCurrentHeadAudio();
-    });
-    head.addEventListener("click", () => openChallenge(index));
-    head.addEventListener("keydown", (e) => {
-      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openChallenge(index); }
-    });
-  });
-  document.getElementById("closeModal").addEventListener("click", closeChallenge);
-  overlay.addEventListener("click", e => { if (e.target === overlay) closeChallenge(); });
-  document.getElementById("showHint").addEventListener("click", () => {
-    if (current === null) return;
-    hint.textContent = "Hint: " + challenges[current].hint;
-    hint.hidden = false;
-  });
-  document.getElementById("replayAudio").addEventListener("click", loadHelpAudio);
-  document.getElementById("resetCode").addEventListener("click", () => {
-    if (current === null) return;
-    editor.value = challenges[current].code;
-    feedback.className = "feedback";
-    feedback.textContent = "";
-    hint.hidden = true;
-  });
-  document.getElementById("submitFix").addEventListener("click", () => {
-    if (current === null) return;
-    const c = challenges[current];
-    if (normalize(editor.value) === normalize(c.solution)) {
-      feedback.className = "feedback show good";
-      feedback.textContent = "Correct fix! The bug is defeated — this head is burning.";
-      fireSound.play().catch(e => console.log("Fire sound play failed:", e));
-      setTimeout(burnCurrent, 500);
+            for (let i = 0; i < 45; i++) {
+              const conf = document.createElement("div");
+              conf.className = "confetti";
+              conf.style.left = `${Math.random() * 100}vw`;
+              conf.style.backgroundColor = ["#ffd875", "#ff581e", "#ff3c28", "#ffe69c", "#ff9d34"][Math.floor(Math.random() * 5)];
+              conf.style.animationDelay = `${Math.random() * 1.5}s`;
+              document.body.appendChild(conf);
+              setTimeout(() => conf.remove(), 4000);
+            }
+          }, 850);
+        }
+      }, 700);
     } else {
       wrongAttempts++;
-      feedback.className = "feedback show bad";
-      feedback.textContent = wrongAttempts >= 3
-        ? "Still not quite — let's get you a little help. Audio help is ready below."
-        : "Not quite. The bug is still alive. Recheck the code and try again.";
-      laughHead(current);
-      ravanLaugh.play().catch(e => console.log("Ravan laugh play failed:", e));
-      hint.textContent = "Hint: " + c.hint;
-      hint.hidden = false;
-      if (wrongAttempts >= 3) loadHelpAudio();
+      feedback.className = "feedback bad";
+      feedback.innerHTML = "<strong>Not quite right.</strong> " + ch.topic;
+      feedback.classList.add("show");
+      ravanLaugh.currentTime = 0;
+      ravanLaugh.play().catch(() => {});
+      if (wrongAttempts >= 2) {
+        loadHelpAudio();
+      }
     }
   });
+
   document.getElementById("playAgain").addEventListener("click", () => {
-    burned = new Set(); solved = 0; current = null; locked = false;
-    heads.forEach(h => { h.classList.remove("burned","burning","laugh"); h.querySelectorAll(".flame-burst,.anger-face").forEach(f => f.remove()); });
-    ravan.classList.remove("all-burning");
-    audioHelp.hidden = true;
-    audioPlayer.innerHTML = "";
+    burned.clear();
+    solved = 0;
+    document.getElementById("burnCount").textContent = "0";
+    document.getElementById("solveCount").textContent = "0";
+    document.getElementById("progressFill").style.width = "0%";
     victoryOverlay.classList.remove("show");
-    stopCurrentHeadAudio();
-    ravanLaugh.pause();
-    ravanLaugh.currentTime = 0;
-    updateStats();
-  });
-  document.addEventListener("keydown", e => {
-    if (e.key === "Escape") { closeChallenge(); victoryOverlay.classList.remove("show"); }
+    ravan.classList.remove("all-burning");
+    heads.forEach(h => {
+      h.classList.remove("burned");
+      h.classList.remove("burning");
+    });
   });
 })();
 </script>
